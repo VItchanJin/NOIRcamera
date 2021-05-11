@@ -1,0 +1,14 @@
+https://picamera.readthedocs.io/en/release-1.13/recipes1.html
+raspberry pi camera 해설
+
+https://potatoggg.tistory.com/192
+video motion detection python
+
+https://s-engineer.tistory.com/107
+video motion detection C++
+
+pip install opencv-python
+pip install opencv-contrib-python
+
+
+python -m motion_detected.py -v VMD_test.mp4
