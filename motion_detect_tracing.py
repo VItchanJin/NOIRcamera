@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import argparse
 import time
+import datetime
 
 '''
 현재 설정
@@ -33,8 +34,9 @@ else:
 if camera.isOpened():
     ret, a = camera.read()
     ret, b = camera.read()
-    while ret:
-        fps = camera.get(cv2.CAP_PROP_FPS)
+
+    while ret:   
+        fps = camera.get(cv2.CAP_PROP_FPS)     
         print(fps)
         count = count + 1 
         ret, c = camera.read()
@@ -73,15 +75,20 @@ if camera.isOpened():
 
             #nzero: diff는 카메라 영상과 사이즈가 같으며, a, b프레임의 차이 어레이를 의미함. 즉 0이 아닌 index을 return
             nzero = np.nonzero(diff)
+            x = min(nzero[1])
+            y = min(nzero[0])
+            w = max(nzero[1]) - x
+            h = max(nzero[0]) - y
+
 
             #rectangle: pt1(min(nzero[1]),min(nzero[0])), pt2(max(nzero[1]), max(nzero[0]) 기준으로 사각형 프레임을 만들어줌.            
-            cv2.rectangle(draw, (min(nzero[1]), min(nzero[0])),(max(nzero[1]), max(nzero[0])), (0, 255, 0), 2)               
+            cv2.rectangle(draw, (x, y),(w, h), (0, 255, 0), 2)               
             #(min(nzero[1]), min(nzero[0]): diff에서 0이 아닌 값 중 행, 열이 가장 작은 포인트
             #(max(nzero[1]), max(nzero[0]): diff에서 0이 아닌 값 중 행, 열이 가장 큰 포인트
             #(0, 255, 0): 사각형을 그릴 색상 값 #2 : thickness          
 
             #imgwrite area
-            img_trim=draw[min(nzero[0]):max(nzero[0]), min(nzero[1]):max(nzero[1])]                  
+            img_trim=draw[y:y+h, x:x+w]                        
             
             cv2.putText(draw, "Motion detected!!", (10, 30),
                         cv2.FONT_HERSHEY_DUPLEX, 0.5, (0, 0, 255))
@@ -91,7 +98,17 @@ if camera.isOpened():
 
         #영상을 원본으로 복구(배열을 다시 앞으로 붙임,그레이스케일을 BGR 색상 이미지로 반환)
         stacked = np.hstack((draw, cv2.cvtColor(diff, cv2.COLOR_GRAY2BGR)))
+        cv2.putText(stacked, datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p"),(25, stacked.shape[0]-50), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
         cv2.imshow('Motion_detect_tracing', stacked)
+        
+        #video recording save               
+        inputVideo = 'D:/VMD_test_video/video.avi' 
+        w = round(camera.get(cv2.CAP_PROP_FRAME_WIDTH))          
+        h = round(camera.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        fourcc = cv2.VideoWriter_fourcc(*'DIVX')
+        outVideo = cv2.VideoWriter(inputVideo, fourcc, fps, (w,h))  
+        stacked = cv2.resize(stacked,(w,h))  
+        outVideo.write(stacked)
  
         a = b
         b = c
